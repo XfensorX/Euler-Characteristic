@@ -30,13 +30,7 @@ def run(experiment_dir: str, config_file: str = "config.yaml"):
     config = get_config(os.path.join(experiment_dir, config_file))
     module = get_experiment_module(os.path.join(experiment_dir, "train.py"))
 
-    # TODO: Add MOdels configuration
-    experiment = module.Experiment(
-        config=config,
-        model=VanillaNN(
-            config.img_x_size * config.img_y_size, 1, [20], flatten_input=True
-        ),
-    )
+    experiment = module.Experiment(config=config)
 
     # TODO: Do not output the confidguration, save some history files for the training
     typer.echo("Running experiment with configuration:")

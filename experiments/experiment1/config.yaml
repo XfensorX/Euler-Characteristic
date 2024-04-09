@@ -1,4 +1,3 @@
-learning_rate: 0.001
 img_x_size: 12
 img_y_size: 12
 img_prob_black: 0.8
@@ -6,6 +5,12 @@ dataset_size: 10000
 train_set_perc: 80
 validation_set_perc: 20
 batch_size: 32
-epochs: 10
 criterion: MSELoss
 optimizer: Adam
+training_configs:
+    Neural Net:
+        learning_rate: 0.001
+        epochs: 100
+    Bigger Neural Net:
+        learning_rate: 0.001
+        epochs: 10

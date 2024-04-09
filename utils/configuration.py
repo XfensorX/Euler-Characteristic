@@ -1,9 +1,9 @@
 import enum
-import os
 from dataclasses import dataclass
 
 import torch
 import yaml
+from typing import Dict
 
 
 class Criterion(enum.Enum):
@@ -55,6 +55,12 @@ class Optimizer(enum.Enum):
 
 
 @dataclass
+class TrainingConfig:
+    learning_rate: float
+    epochs: int
+
+
+@dataclass
 class ExperimentConfig:
     img_x_size: int
     img_y_size: int
@@ -63,10 +69,9 @@ class ExperimentConfig:
     train_set_perc: float
     validation_set_perc: float
     batch_size: int
-    learning_rate: float
-    epochs: int
     criterion: Criterion
     optimizer: Optimizer
+    training_configs: Dict[str, TrainingConfig]
 
     def __post_init__(self):
         Optimizer.check_if_valid(self.optimizer)
@@ -77,8 +82,10 @@ class ExperimentConfig:
     def get_criterion_func(self):
         return self.criterion.get_func()
 
-    def get_optimizer_func(self, model_parameters):
-        return self.optimizer.get_func(model_parameters, self.learning_rate)
+    def get_optimizer_func(self, model_name, model_parameters):
+        return self.optimizer.get_func(
+            model_parameters, self.training_configs[model_name].learning_rate
+        )
 
     def __str__(self):
         config_dict = {field: getattr(self, field) for field in self.__annotations__}
@@ -95,15 +102,30 @@ def load_config(path: str) -> ExperimentConfig:
     with open(path, "r") as f:
         config = yaml.safe_load(f)
 
+    # TODO: error handling, could be refactored with the other
+    if "training_configs" in config:
+        config["training_configs"] = {
+            name: TrainingConfig(**info)
+            for name, info in config["training_configs"].items()
+        }
+
     try:
         config = ExperimentConfig(**config)
-    except TypeError:
+    except TypeError as e:
         error = ValueError("Invalid yaml file.")
-        error.note = (
-            f"Wrong Format in the configuration of {path}. "
-            + "The following configurations are missing:\n"
-            + ":\n".join(str(e).split("'")[1::2] + [""])
-        )
+
+        if "got an unexpected keyword argument" in str(e):
+            error.note = (
+                f"Wrong Format in the configuration of {path} \n"
+                + "The following configurations are not allowed:\n"
+                + ":\n".join(str(e).split("'")[1::2] + [""])
+            )
+        else:
+            error.note = (
+                f"Wrong Format in the configuration of {path} \n"
+                + "The following configurations are missing:\n"
+                + ":\n".join(str(e).split("'")[1::2] + [""])
+            )
         raise error
 
     except ValueError as e:

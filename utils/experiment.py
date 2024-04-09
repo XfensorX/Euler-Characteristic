@@ -1,18 +1,23 @@
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 
-from utils.data import ImageDataset, SplittedDataLoaders, create_splitted_dataloader
+from torch import nn
+
 from utils.configuration import ExperimentConfig
+from utils.data import ImageDataset, SplittedDataLoaders, create_splitted_dataloader
 from utils.training import train_model
 
 
-class Experiment:
-    # TODO: How to use several models?
-    def __init__(self, config: ExperimentConfig, model):
+class Experiment(metaclass=ABCMeta):
+    def __init__(self, config: ExperimentConfig):
         self.config = config
-        self.model = model
+        self.check_model_configurations_are_present()
         self.reset_experiment()
 
+    @property
     @abstractmethod
+    def models(self) -> {str: nn.Module}:
+        pass
+
     def post_dataset_creation(self):
         pass
 
@@ -33,21 +38,35 @@ class Experiment:
             self.config.batch_size,
         )
         self.criterion = self.config.get_criterion_func()
-        self.optimizer = self.config.get_optimizer_func(self.model.parameters())
+        self.optimizers = {
+            name: self.config.get_optimizer_func(name, model.parameters())
+            for name, model in self.models.items()
+        }
+
+    def check_model_configurations_are_present(self):
+        if not all(
+            [key in self.config.training_configs.keys() for key in self.models.keys()]
+        ):
+            raise ValueError("Not all registered models have a configuration present.")
 
     def run(self, with_reset=True, output_to=print):
         if with_reset:
             self.reset_experiment()
 
-        train_losses, val_losses = train_model(
-            self.model,
-            self.data_loaders,
-            self.criterion,
-            self.optimizer,
-            num_epochs=self.config.epochs,
-            # TODO: To config? Or maybe better just log it
-            verbose=False,
-            output_to=output_to,
-        )
+        losses = {}
+        for name, model in self.models.items():
+            output_to(f"Running {name}...")
+            train_losses, val_losses = train_model(
+                model,
+                self.data_loaders,
+                self.criterion,
+                self.optimizers[name],
+                num_epochs=self.config.training_configs[name].epochs,
+                # TODO: To config? Or maybe better just log it
+                verbose=False,
+                output_to=output_to,
+            )
+            losses[name] = (train_losses, val_losses)
+            output_to("")
 
-        return train_losses, val_losses
+        return losses
