@@ -1,10 +1,27 @@
 from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass
+from typing import Dict, List
 
 from torch import nn
 
 from utils.configuration import ExperimentConfig
 from utils.data import ImageDataset, SplittedDataLoaders, create_splitted_dataloader
 from utils.training import train_model
+from utils.evaluation import LossCalculation, calculate_all_losses
+
+
+@dataclass
+class ModelExperimentResult:
+    train_losses_history: List[float]
+    val_losses_history: List[float]
+    losses: LossCalculation
+    losses_with_rounding: LossCalculation
+
+
+@dataclass
+class WholeExperimentResult:
+    model_results: Dict[str, ModelExperimentResult]
+    config: ExperimentConfig
 
 
 class Experiment(metaclass=ABCMeta):
@@ -49,7 +66,9 @@ class Experiment(metaclass=ABCMeta):
         ):
             raise ValueError("Not all registered models have a configuration present.")
 
-    def run(self, with_reset=True, output_to=print, model=None):
+    def run(
+        self, with_reset=True, output_to=print, model=None
+    ) -> WholeExperimentResult:
         if with_reset:
             self.reset_experiment()
 
@@ -64,7 +83,7 @@ class Experiment(metaclass=ABCMeta):
                 raise error
             models_to_run = [model]
 
-        losses = {}
+        model_results = {}
         for name in models_to_run:
             output_to(f"Running {name}...")
             train_losses, val_losses = train_model(
@@ -77,7 +96,22 @@ class Experiment(metaclass=ABCMeta):
                 verbose=False,
                 output_to=output_to,
             )
-            losses[name] = (train_losses, val_losses)
+            model_results[name] = ModelExperimentResult(
+                train_losses_history=train_losses,
+                val_losses_history=val_losses,
+                losses=calculate_all_losses(
+                    self.data_loaders,
+                    self.models[name],
+                    self.criterion,
+                    use_rounding=False,
+                ),
+                losses_with_rounding=calculate_all_losses(
+                    self.data_loaders,
+                    self.models[name],
+                    self.criterion,
+                    use_rounding=True,
+                ),
+            )
             output_to("")
 
-        return losses
+        return WholeExperimentResult(config=self.config, model_results=model_results)

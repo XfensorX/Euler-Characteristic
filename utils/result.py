@@ -1,12 +1,64 @@
 import os
 import time
+from dataclasses import asdict
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
+import yaml
 
-from utils.evaluation import calculate_loss
+from utils.experiment import WholeExperimentResult
 from utils.visuals import save_image_as_img
+
+
+# TODO: refactor this into individual subfunctions
+def generate_results(experiment_name: str, results: WholeExperimentResult, path: str):
+    os.makedirs(path, exist_ok=True)
+
+    config_yaml_path = os.path.join(path, "used_config.yaml")
+    with open(config_yaml_path, "w") as config_file:
+        yaml.dump(asdict(results.config), config_file)
+
+    all_model_data = []
+    for model_name, result_obj in results.model_results.items():
+        model_folder_path = os.path.join(path, model_name.replace(" ", "_"))
+        os.makedirs(model_folder_path, exist_ok=True)
+
+        loss_history_path = os.path.join(model_folder_path, f"loss_history.csv")
+        pd.DataFrame(
+            {
+                "Epoch": list(range(1, 1 + len(result_obj.train_losses_history))),
+                "Training Loss": result_obj.train_losses_history,
+                "Validation Loss": result_obj.val_losses_history,
+            }
+        ).to_csv(loss_history_path, index=False)
+
+        plot_training_history(
+            result_obj.train_losses_history,
+            result_obj.val_losses_history,
+            f"Training History of '{model_name}'",
+            os.path.join(model_folder_path, "training_history.png"),
+        )
+
+    df_data = {}
+    for model, losses in results.model_results.items():
+        df_data[model] = [
+            losses.losses.train,
+            losses.losses.validation,
+            losses.losses.test,
+            losses.losses_with_rounding.train,
+            losses.losses_with_rounding.validation,
+            losses.losses_with_rounding.test,
+        ]
+
+    all_losses_df = pd.DataFrame.from_dict(
+        df_data,
+        orient="index",
+        columns=pd.MultiIndex.from_product(
+            [["Loss", "Loss with Rounding"], ["Train", "Validation", "Test"]]
+        ),
+    )
+    all_losses_df.to_csv(os.path.join(path, "combined_losses.csv"))
 
 
 def save_predictions(
@@ -46,32 +98,15 @@ def save_predictions(
     df.to_csv(os.path.join(folder_name, "results.csv"), index=False)
 
 
-def plot_training_history(train_losses, val_losses, title=""):
+def plot_training_history(train_losses, val_losses, title="", save_path=None):
     plt.plot(train_losses, label="Train Loss")
     plt.plot(val_losses, label="Val Loss")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.title(title)
     plt.legend()
-    plt.show()
-
-
-def plot_losses(data_loaders, criterion, models):
-    """
-    models is a dictionary mapping model name to the model
-    """
-    names, losses_test, losses_val, losses_train = [], [], [], []
-    for name, model in models.items():
-        names.append(name)
-        losses_test.append(calculate_loss(model, data_loaders["test"], criterion))
-        losses_train.append(calculate_loss(model, data_loaders["train"], criterion))
-        losses_val.append(calculate_loss(model, data_loaders["validation"], criterion))
-
-    plt.bar(names, losses_test, label="Test")
-    plt.bar(names, losses_val, label="Validation")
-    plt.bar(names, losses_train, label="Test")
-    plt.xlabel("Model")
-    plt.ylabel("Loss")
-    plt.title("Loss Comparison")
-    plt.xticks(rotation=45)
-    plt.show()
+    if save_path:
+        plt.savefig(save_path)
+        plt.close()
+    else:
+        plt.show()

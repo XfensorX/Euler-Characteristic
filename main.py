@@ -1,22 +1,50 @@
 # TODO: Add Tests
+import datetime
 import importlib.util
 import os
+import shutil
 
 import typer
 
 from utils.configuration import load_config
-from models.VanillaNN import VanillaNN
+from utils.result import generate_results
 
 app = typer.Typer()
 
-
-@app.command()
-def show():
-    pass
+CAN_CLEAN_DIRS = "results"
 
 
 @app.command()
-def run(experiment_dir: str, config_file: str = "config.yaml", model: str = None):
+def clean(directory: str):
+    """Clean the specified directory."""
+    if directory not in CAN_CLEAN_DIRS:
+        typer.echo(
+            f"Cannot clean '{directory}'. Can only clean: {', '.join(CAN_CLEAN_DIRS)}"
+        )
+        raise typer.Exit(1)
+
+    if not os.path.exists(directory):
+        typer.echo(f"The directory '{directory}' does not exist.")
+        raise typer.Exit(1)
+
+    confirm = typer.confirm(
+        f"Do you really want to fully remove all contents of the '{directory}' directory?"
+    )
+    if confirm:
+        try:
+            shutil.rmtree(directory)
+            os.makedirs("results")
+            typer.echo(
+                f"All contents of the '{directory}' directory have been removed."
+            )
+        except Exception as e:
+            typer.echo(f"An error occurred while trying to clean the directory: {e}")
+    else:
+        typer.echo("Operation aborted.")
+
+
+@app.command()
+def run(experiment: str, config_file: str = "config.yaml", model: str = None):
     """
     Run experiments.
 
@@ -24,19 +52,23 @@ def run(experiment_dir: str, config_file: str = "config.yaml", model: str = None
     :param config_file: Experiment configuration file
     """
 
-    experiment_dir = os.path.join("experiments", experiment_dir)
+    experiment_dir = os.path.join("experiments", experiment)
     check_if_exists(experiment_dir)
 
     config = get_config(os.path.join(experiment_dir, config_file))
     module = get_experiment_module(os.path.join(experiment_dir, "train.py"))
 
-    experiment = module.Experiment(config=config)
+    experiment_obj = module.Experiment(config=config)
 
-    # TODO: Do not output the confidguration, save some history files for the training
-    typer.echo("Running experiment with configuration:")
-    typer.echo(str(config) + "\n")
+    # TODO: Refactoring
+    typer.echo(f"Running experiment '{experiment_dir}'\n")
     try:
-        experiment.run(model=model)
+        results = experiment_obj.run(model=model)
+        typer.echo("Generate results...", nl=False)
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        results_dir = os.path.join("results", f"{current_time}_{experiment}")
+        generate_results(experiment_dir, results, results_dir)
+        typer.echo(f"\rGenerated results in {results_dir}!      ")
     except KeyError as e:
         typer.echo(e.note)
         raise typer.Exit(code=1)
