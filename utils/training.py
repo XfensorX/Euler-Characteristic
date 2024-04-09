@@ -15,16 +15,14 @@ def train_model(
     val_losses = []
     for epoch in range(num_epochs):
         model.train()
-        running_train_loss = 0.0
         for batch_features, batch_labels in splitted_loaders.train:
             optimizer.zero_grad()
             outputs = model(batch_features)
             loss = criterion(outputs, batch_labels)
             loss.backward()
             optimizer.step()
-            running_train_loss += loss.item() * batch_features.size(0)
 
-        epoch_train_loss = running_train_loss / len(splitted_loaders.train.dataset)
+        epoch_train_loss = calculate_loss(model, splitted_loaders.train, criterion)
         train_losses.append(epoch_train_loss)
 
         epoch_val_loss = calculate_loss(model, splitted_loaders.validation, criterion)
@@ -39,7 +37,7 @@ def train_model(
             # TODO: this might not be standardized??
             output_to(text_line, end="\r")
 
-    output_to(" " * len(text_line), end="\r")
+    output_to(" " * (len(text_line) + 1), end="\r")
     output_to(
         create_text_output(
             epoch, num_epochs, epoch_train_loss, epoch_val_loss, is_finished=True
