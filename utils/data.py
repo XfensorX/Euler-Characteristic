@@ -55,6 +55,11 @@ def create_splitted_dataloader(
     val_size = int(val_set_perc / 100 * len(dataset))
     test_size = len(dataset) - train_size - val_size
 
+    if not test_size > 0:
+        raise ValueError(
+            "No test set left. Please adjust training/validation/test split fractions."
+        )
+
     train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(
         dataset, [train_size, val_size, test_size]
     )
