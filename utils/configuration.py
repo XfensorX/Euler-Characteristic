@@ -16,6 +16,8 @@ class Criterion(enum.Enum):
         if self is Criterion.MSE_LOSS:
             return torch.nn.MSELoss()
 
+        raise ValueError("An Option is not implemented.")
+
     @staticmethod
     def check_if_valid(criterion: str):
         if criterion in [c.value for c in Criterion]:
@@ -37,6 +39,8 @@ class Optimizer(enum.Enum):
     def get_func(self, model_parameters, learning_rate):
         if self is Optimizer.ADAM:
             return torch.optim.Adam(model_parameters, lr=learning_rate)
+
+        raise ValueError("An Option is not implemented.")
 
     @staticmethod
     def check_if_valid(optimizer: str):
@@ -71,10 +75,10 @@ class ExperimentConfig:
         self.criterion = Criterion(self.criterion)
 
     def get_criterion_func(self):
-        self.criterion.get_func()
+        return self.criterion.get_func()
 
     def get_optimizer_func(self, model_parameters):
-        self.optimizer.get_func(model_parameters, self.learning_rate)
+        return self.optimizer.get_func(model_parameters, self.learning_rate)
 
     def __str__(self):
         config_dict = {field: getattr(self, field) for field in self.__annotations__}
