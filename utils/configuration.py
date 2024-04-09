@@ -1,5 +1,5 @@
 import enum
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 import torch
 import yaml
@@ -10,7 +10,7 @@ class Criterion(enum.Enum):
     MSE_LOSS = "MSELoss"
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     def get_func(self):
         if self is Criterion.MSE_LOSS:
@@ -34,7 +34,7 @@ class Optimizer(enum.Enum):
     ADAM = "Adam"
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     def get_func(self, model_parameters, learning_rate):
         if self is Optimizer.ADAM:
@@ -69,30 +69,24 @@ class ExperimentConfig:
     train_set_perc: float
     validation_set_perc: float
     batch_size: int
-    criterion: Criterion
-    optimizer: Optimizer
+    criterion: str  # Criterion
+    optimizer: str  # Optimizer
     training_configs: Dict[str, TrainingConfig]
 
     def __post_init__(self):
         Optimizer.check_if_valid(self.optimizer)
         Criterion.check_if_valid(self.criterion)
-        self.optimizer = Optimizer(self.optimizer)
-        self.criterion = Criterion(self.criterion)
 
     def get_criterion_func(self):
-        return self.criterion.get_func()
+        return Criterion(self.criterion).get_func()
 
     def get_optimizer_func(self, model_name, model_parameters):
-        return self.optimizer.get_func(
+        return Optimizer(self.optimizer).get_func(
             model_parameters, self.training_configs[model_name].learning_rate
         )
 
     def __str__(self):
-        config_dict = {field: getattr(self, field) for field in self.__annotations__}
-        yaml_str = "\n".join(
-            [f"- {key}: {value}" for key, value in config_dict.items()]
-        )
-        return yaml_str
+        return yaml.dump(asdict(self))
 
 
 def load_config(path: str) -> ExperimentConfig:
