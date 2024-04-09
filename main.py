@@ -16,7 +16,7 @@ def show():
 
 
 @app.command()
-def run(experiment_dir: str, config_file: str = "config.yaml"):
+def run(experiment_dir: str, config_file: str = "config.yaml", model: str = None):
     """
     Run experiments.
 
@@ -35,7 +35,11 @@ def run(experiment_dir: str, config_file: str = "config.yaml"):
     # TODO: Do not output the confidguration, save some history files for the training
     typer.echo("Running experiment with configuration:")
     typer.echo(str(config) + "\n")
-    experiment.run()
+    try:
+        experiment.run(model=model)
+    except KeyError as e:
+        typer.echo(e.note)
+        raise typer.Exit(code=1)
 
 
 def get_config(path: str):

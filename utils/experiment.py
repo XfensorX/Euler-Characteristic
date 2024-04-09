@@ -49,15 +49,26 @@ class Experiment(metaclass=ABCMeta):
         ):
             raise ValueError("Not all registered models have a configuration present.")
 
-    def run(self, with_reset=True, output_to=print):
+    def run(self, with_reset=True, output_to=print, model=None):
         if with_reset:
             self.reset_experiment()
 
+        models_to_run = self.models.keys()
+        # TODO: Add custom error class
+        if model is not None:
+            if not model in self.models.keys():
+                error = KeyError()
+                error.note = "Invalid Model Name, choose from: \n- " + "\n- ".join(
+                    self.models.keys()
+                )
+                raise error
+            models_to_run = [model]
+
         losses = {}
-        for name, model in self.models.items():
+        for name in models_to_run:
             output_to(f"Running {name}...")
             train_losses, val_losses = train_model(
-                model,
+                self.models[name],
                 self.data_loaders,
                 self.criterion,
                 self.optimizers[name],
