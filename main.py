@@ -1,4 +1,4 @@
-import argparse
+# TODO: Add Tests
 import importlib.util
 import os
 
@@ -11,7 +11,12 @@ app = typer.Typer()
 
 
 @app.command()
-def run_experiment(experiment_dir: str, config_file: str = "config.yaml"):
+def show():
+    pass
+
+
+@app.command()
+def run(experiment_dir: str, config_file: str = "config.yaml"):
     """
     Run experiments.
 
@@ -20,54 +25,51 @@ def run_experiment(experiment_dir: str, config_file: str = "config.yaml"):
     """
 
     experiment_dir = os.path.join("experiments", experiment_dir)
+    check_if_exists(experiment_dir)
 
-    if not os.path.exists(experiment_dir):
-        typer.echo(f"Experiment directory '{experiment_dir}' not found.")
+    config = get_config(os.path.join(experiment_dir, config_file))
+    module = get_experiment_module(os.path.join(experiment_dir, "train.py"))
+
+    # TODO: Add MOdels configuration
+    experiment = module.Experiment(
+        config=config,
+        model=VanillaNN(
+            config.img_x_size * config.img_y_size, 1, [20], flatten_input=True
+        ),
+    )
+
+    # TODO: Do not output the confidguration, save some history files for the training
+    typer.echo("Running experiment with configuration:")
+    typer.echo(str(config) + "\n")
+    experiment.run()
+
+
+def get_config(path: str):
+    try:
+        config = load_config(path)
+    except ValueError as e:
+        typer.echo(e.note)
         raise typer.Exit(code=1)
 
-    spec = importlib.util.spec_from_file_location(
-        "train", os.path.join(experiment_dir, "train.py")
-    )
+    return config
+
+
+def check_if_exists(directory: str):
+    if not os.path.exists(directory):
+        typer.echo(f"'{directory}' not found.")
+        raise typer.Exit(code=1)
+
+
+def get_experiment_module(file_path: str):
+    spec = importlib.util.spec_from_file_location("train", file_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
-    if hasattr(module, "Experiment"):
-        try:
-            config = load_config(experiment_dir, config_file)
-        except TypeError as e:
-            typer.echo(
-                f"Wrong Format in the configuration of {experiment_dir}. The following configurations are missing:\n"
-            )
-            typer.echo(":\n".join(str(e).split("'")[1::2] + [""]))
-            raise typer.Exit(code=1)
-        except ValueError as e:
-            typer.echo(str(e))
-            typer.echo(str(e.note))
-            raise typer.Exit(code=1)
-
-        # TODO: Add MOdels configuration
-        experiment = module.Experiment(
-            config=config,
-            model=VanillaNN(
-                config.img_x_size * config.img_y_size, 1, [20], flatten_input=True
-            ),
-        )
-        # TODO: Do not output the confidguration, save some history files for the training
-        typer.echo("Running experiment with configuration:")
-        typer.echo(config)
-        typer.echo("")
-        experiment.run()
-    else:
-        typer.echo(f"Error: 'Experiment' class not found in {experiment_dir}/train.py")
+    if not hasattr(module, "Experiment"):
+        typer.echo(f"Error: 'Experiment' class not found in {file_path}")
         raise typer.Exit(code=1)
 
-
-def main():
-    parser = argparse.ArgumentParser(description="Run experiments")
-    parser.add_argument("experiment", help="Name of the experiment to run")
-    args = parser.parse_args()
-
-    run_experiment(args.experiment)
+    return module
 
 
 if __name__ == "__main__":

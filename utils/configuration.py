@@ -88,12 +88,27 @@ class ExperimentConfig:
         return yaml_str
 
 
-def load_config(experiment_dir: str, config_file: str) -> ExperimentConfig:
+def load_config(path: str) -> ExperimentConfig:
     """
     Load experiment configuration from a YAML file.
     """
-    config_path = os.path.join(experiment_dir, config_file)
-    with open(config_path, "r") as f:
+    with open(path, "r") as f:
         config = yaml.safe_load(f)
 
-    return ExperimentConfig(**config)
+    try:
+        config = ExperimentConfig(**config)
+    except TypeError:
+        error = ValueError("Invalid yaml file.")
+        error.note = (
+            f"Wrong Format in the configuration of {path}. "
+            + "The following configurations are missing:\n"
+            + ":\n".join(str(e).split("'")[1::2] + [""])
+        )
+        raise error
+
+    except ValueError as e:
+        error = ValueError("Invalid yaml file.")
+        error.note = str(e) + str(e.note)
+        raise error
+
+    return config
