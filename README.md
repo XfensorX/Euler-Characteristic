@@ -19,13 +19,13 @@ python main.py --help
 Install Libraries with:
 
 ```bash
-conda env create -f environment.yml
+conda env create -f environment.yaml
 ```
 
 # Add new libraries:
 
-Update [environment.yml](environment.yml) with :
+Update [environment.yaml](environment.yaml) with :
 
 ```bash
-conda env export | grep -v "^prefix: " > environment.yml
+conda env export | grep -v "^prefix: " > environment.yaml
 ```
