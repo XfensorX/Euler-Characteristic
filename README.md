@@ -1,6 +1,6 @@
-# MLTemplate
+# Euler Characteristic
 
-Template Project for a Machine Learning Project using Pytorch or maybe also other ML libraries.
+Trying to predict Euler Characteristic with different Neural Network Based Models.
 
 # Usage
 
