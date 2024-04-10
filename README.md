@@ -5,7 +5,7 @@ Trying to predict Euler Characteristic with different Neural Network Based Model
 # Usage
 
 ```bash
-euler <experiment_name>
+euler run <experiment_name>
 ```
 
 for more info
