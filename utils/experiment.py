@@ -1,4 +1,3 @@
-from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from typing import Dict, List
 
@@ -6,8 +5,8 @@ from torch import nn
 
 from utils.configuration import ExperimentConfig
 from utils.data import ImageDataset, SplittedDataLoaders, create_splitted_dataloader
-from utils.training import train_model
 from utils.evaluation import LossCalculation, calculate_all_losses
+from utils.training import train_model
 
 
 @dataclass
@@ -24,16 +23,12 @@ class WholeExperimentResult:
     config: ExperimentConfig
 
 
-class Experiment(metaclass=ABCMeta):
-    def __init__(self, config: ExperimentConfig):
+class Experiment:
+    def __init__(self, config: ExperimentConfig, models: {str: nn.Module}):
         self.config = config
+        self.models = models
         self.check_model_configurations_are_present()
         self.reset_experiment()
-
-    @property
-    @abstractmethod
-    def models(self) -> {str: nn.Module}:
-        pass
 
     def post_dataset_creation(self):
         pass
@@ -92,8 +87,6 @@ class Experiment(metaclass=ABCMeta):
                 self.criterion,
                 self.optimizers[name],
                 num_epochs=self.config.training_configs[name].epochs,
-                # TODO: To config? Or maybe better just log it
-                verbose=False,
                 output_to=output_to,
             )
             model_results[name] = ModelExperimentResult(

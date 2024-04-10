@@ -1,17 +1,31 @@
 # TODO: Add Tests
 import datetime
+import enum
 import importlib.util
 import os
 import shutil
 
 import typer
 
-from utils.configuration import load_config
+from utils.configuration import generate_dummy_config, load_config
 from utils.result import generate_results
 
 app = typer.Typer()
 
 CAN_CLEAN_DIRS = "results"
+
+
+class CreationOption(enum.Enum):
+    CONFIG = "config"
+
+
+@app.command()
+def create(what: CreationOption, experiment: str):
+    experiment_dir = os.path.join("experiments", experiment)
+    check_if_exists(experiment_dir)
+    generate_dummy_config(
+        experiment_dir, ["Custom Model Name 1", "Custom Model Name 2"]
+    )
 
 
 @app.command()
@@ -58,7 +72,7 @@ def run(experiment: str, config_file: str = "config.yaml", model: str = None):
     config = get_config(os.path.join(experiment_dir, config_file))
     module = get_experiment_module(os.path.join(experiment_dir, "train.py"))
 
-    experiment_obj = module.Experiment(config=config)
+    experiment_obj = module.Experiment(config=config, models=module.get_models(config))
 
     # TODO: Refactoring
     typer.echo(f"Running experiment '{experiment_dir}'\n")

@@ -8,7 +8,6 @@ def train_model(
     criterion,
     optimizer,
     num_epochs,
-    verbose=True,
     output_to=print,
 ):
     train_losses = []
@@ -31,11 +30,7 @@ def train_model(
         text_line = create_text_output(
             epoch, num_epochs, epoch_train_loss, epoch_val_loss
         )
-        if verbose:
-            output_to(text_line)
-        else:
-            # TODO: this might not be standardized??
-            output_to(text_line, end="\r")
+        output_to(text_line, end="\r")
 
     output_to(" " * (len(text_line) + 1), end="\r")
     output_to(

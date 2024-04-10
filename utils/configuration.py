@@ -1,9 +1,10 @@
 import enum
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from typing import Dict, List
 
 import torch
 import yaml
-from typing import Dict
+import os
 
 
 class Criterion(enum.Enum):
@@ -59,6 +60,10 @@ class TrainingConfig:
     learning_rate: float
     epochs: int
 
+    @staticmethod
+    def get_dummy():
+        return TrainingConfig(0.01, 50)
+
 
 @dataclass
 class ExperimentConfig:
@@ -87,6 +92,27 @@ class ExperimentConfig:
 
     def __str__(self):
         return yaml.dump(asdict(self))
+
+    @staticmethod
+    def get_dummy(model_names: List[str]):
+        return ExperimentConfig(
+            28,
+            28,
+            0.8,
+            10000,
+            0.8,
+            0.1,
+            32,
+            "MSELoss",
+            "Adam",
+            {name: TrainingConfig.get_dummy() for name in model_names},
+        )
+
+
+def generate_dummy_config(path: str, model_names: List[str]):
+    dummy_path = os.path.join(path, "dummy_config.yaml")
+    with open(dummy_path, "w") as config_file:
+        yaml.dump(asdict(ExperimentConfig.get_dummy(model_names)), config_file)
 
 
 def load_config(path: str) -> ExperimentConfig:

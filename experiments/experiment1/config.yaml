@@ -8,9 +8,9 @@ batch_size: 32
 criterion: MSELoss
 optimizer: Adam
 training_configs:
-    Neural Net:
+    in-20-out:
         learning_rate: 0.001
         epochs: 10
-    Bigger Neural Net:
+    in-20-20-20-out:
         learning_rate: 0.001
         epochs: 10
