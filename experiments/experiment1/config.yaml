@@ -14,3 +14,6 @@ training_configs:
     in-20-20-20-out:
         learning_rate: 0.001
         epochs: 10
+    conv:
+        learning_rate: 0.001
+        epochs: 10

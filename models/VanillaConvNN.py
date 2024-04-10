@@ -2,10 +2,9 @@ import torch
 from torch import nn
 
 
-class ConvolutionalNN(nn.Module):
+class VanillaConvNN(nn.Module):
     def __init__(
         self,
-        input_size,
         hidden_size,
         output_size,
         img_x_size,
