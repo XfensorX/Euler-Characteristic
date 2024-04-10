@@ -5,21 +5,28 @@ Template Project for a Machine Learning Project using Pytorch or maybe also othe
 # Usage
 
 ```bash
-python main.py run <experiment_name>
+euler <experiment_name>
 ```
 
 for more info
 
 ```bash
-python main.py --help
+euler --help
 ```
 
 # Setup
 
+Activate shortcuts (everytime you live the terminal):
+
+```bash
+source shortcuts.bash
+```
+
 Install Libraries with:
 
 ```bash
-conda env create -f environment.yaml
+conda env create -f environment.yaml -n euler
+conda activate euler
 ```
 
 # Add new libraries:
