@@ -25,14 +25,14 @@ source shortcuts.bash
 Install Libraries with:
 
 ```bash
-conda env create -f environment.yaml -n euler
-conda activate euler
+activate_env
+install_requirements
 ```
 
 # Add new libraries:
 
-Update [environment.yaml](environment.yaml) with :
+Update [requirements.txt](requirements.txt) with :
 
 ```bash
-conda env export | grep -v "^prefix: " > environment.yaml
+save_requirements
 ```
