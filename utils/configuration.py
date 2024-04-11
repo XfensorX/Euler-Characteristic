@@ -1,10 +1,10 @@
 import enum
+import os
 from dataclasses import asdict, dataclass
 from typing import Dict, List
 
 import torch
 import yaml
-import os
 
 
 class Criterion(enum.Enum):
