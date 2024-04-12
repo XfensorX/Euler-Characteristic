@@ -14,6 +14,32 @@ for more info
 euler --help
 ```
 
+# GCloud
+
+```bash
+cd terraform
+terraform apply
+gcloud compute ssh <instance name>
+
+#in the VM:
+sudo apt install git python3-full python3-pip
+git clone https://github.com/XfensorX/Euler-Characteristic.git euler
+cd euler
+source shortcuts.bash
+install_requirements
+
+euler run <experiment>
+
+# exit the VM
+exit
+
+# after experiment exit compy the results
+gcloud compute scp --recurse <username>@<instance name>:~/euler/results <some directory>/results
+
+# destroy the ressource
+terraform destroy
+```
+
 # Setup
 
 Activate shortcuts (everytime you live the terminal):
