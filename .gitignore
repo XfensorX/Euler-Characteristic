@@ -5,6 +5,10 @@ __pycache__/
 
 # Mac Stuff
 *.DS_Store
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
 
 # C extensions
 *.so
