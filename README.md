@@ -34,7 +34,7 @@ euler run <experiment>
 exit
 
 # after experiment exit compy the results
-gcloud compute scp --recurse <username>@<instance name>:~/euler/results <some directory>/results
+gcloud compute scp --recurse <username>@<instance name>:~/euler/results ../results
 
 # destroy the ressource
 terraform destroy
