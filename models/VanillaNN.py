@@ -2,7 +2,14 @@ from torch import nn
 
 
 class VanillaNN(nn.Module):
-    def __init__(self, input_size, output_size, hidden_sizes=None, flatten_input=False):
+    def __init__(
+        self,
+        input_size,
+        output_size,
+        hidden_sizes=None,
+        flatten_input=False,
+        activation=nn.ReLU,
+    ):
         super().__init__()
 
         self.flatten_input = flatten_input
@@ -15,11 +22,11 @@ class VanillaNN(nn.Module):
         else:
             layers = []
             layers.append(nn.Linear(input_size, hidden_sizes[0]))
-            layers.append(nn.ReLU())
+            layers.append(activation())
 
             for i in range(1, len(hidden_sizes)):
                 layers.append(nn.Linear(hidden_sizes[i - 1], hidden_sizes[i]))
-                layers.append(nn.ReLU())
+                layers.append(activation())
 
             layers.append(nn.Linear(hidden_sizes[-1], output_size))
             self.layers = nn.Sequential(*layers)
