@@ -41,10 +41,7 @@ class SplittedDataLoaders:
 
 
 def create_splitted_dataloader(
-    dataset,
-    train_set_perc,
-    val_set_perc,
-    batch_size,
+    dataset, train_set_perc, val_set_perc, batch_size, device="cpu"
 ) -> SplittedDataLoaders:
     """
     Creates data loaders and torch.util.data.Datasets
@@ -61,11 +58,28 @@ def create_splitted_dataloader(
         )
 
     train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(
-        dataset, [train_size, val_size, test_size]
+        dataset,
+        [train_size, val_size, test_size],
+        generator=torch.Generator(device=device),
     )
 
     return SplittedDataLoaders(
-        train=DataLoader(train_dataset, batch_size=batch_size, shuffle=True),
-        validation=DataLoader(val_dataset, batch_size=batch_size, shuffle=False),
-        test=DataLoader(test_dataset, batch_size=batch_size, shuffle=False),
+        train=DataLoader(
+            train_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            generator=torch.Generator(device=device),
+        ),
+        validation=DataLoader(
+            val_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            generator=torch.Generator(device=device),
+        ),
+        test=DataLoader(
+            test_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            generator=torch.Generator(device=device),
+        ),
     )

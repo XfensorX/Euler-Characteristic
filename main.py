@@ -5,6 +5,7 @@ import importlib.util
 import os
 import shutil
 
+import torch
 import typer
 
 from utils.configuration import generate_dummy_config, load_config
@@ -12,6 +13,7 @@ from utils.general import timing
 from utils.result import generate_results
 
 app = typer.Typer()
+
 
 CAN_CLEAN_DIRS = "results"
 
@@ -62,7 +64,12 @@ def clean(directory: str):
 
 
 @app.command()
-def run(experiment: str, config_file: str = "config.yaml", model: str = None):
+def run(
+    experiment: str,
+    config_file: str = "config.yaml",
+    model: str = None,
+    device: str = "cpu",
+):
     """
     Run experiments.
 
@@ -70,19 +77,24 @@ def run(experiment: str, config_file: str = "config.yaml", model: str = None):
     :param config_file: Experiment configuration file
     """
 
+    torch.set_default_device(device)
+
     experiment_dir = os.path.join("experiments", experiment)
     check_if_exists(experiment_dir)
 
     config = get_config(os.path.join(experiment_dir, config_file))
     module = get_experiment_module(os.path.join(experiment_dir, "train.py"))
 
-    experiment_obj = module.Experiment(config=config, models=module.get_models(config))
+    experiment_obj = module.Experiment(
+        config=config, models=module.get_models(config), device=device
+    )
 
     # TODO: Refactoring
     typer.echo(f"Running experiment '{experiment_dir}'\n")
     try:
         with timing():
             results = experiment_obj.run(model=model)
+
         typer.echo("Generate results...", nl=False)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         results_dir = os.path.join("results", f"{current_time}_{experiment}")

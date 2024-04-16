@@ -24,7 +24,10 @@ class WholeExperimentResult:
 
 
 class Experiment:
-    def __init__(self, config: ExperimentConfig, models: {str: nn.Module}):
+    def __init__(
+        self, config: ExperimentConfig, models: {str: nn.Module}, device="cpu"
+    ):
+        self.device = device
         self.config = config
         self.models = models
         self.check_model_configurations_are_present()
@@ -48,6 +51,7 @@ class Experiment:
             self.config.train_set_perc,
             self.config.validation_set_perc,
             self.config.batch_size,
+            device=self.device,
         )
         self.criterion = self.config.get_criterion_func()
         self.optimizers = {
@@ -56,9 +60,21 @@ class Experiment:
         }
 
     def check_model_configurations_are_present(self):
-        if not all(
+        if all(
             [key in self.config.training_configs.keys() for key in self.models.keys()]
         ):
+            return
+
+        if "rest" in self.config.training_configs.keys():
+            for key in self.models.keys():
+                if key in self.config.training_configs:
+                    return
+                else:
+                    self.config.training_configs[key] = self.config.training_configs[
+                        "rest"
+                    ]
+        else:
+
             raise ValueError("Not all registered models have a configuration present.")
 
     def run(
