@@ -8,6 +8,7 @@ import shutil
 import typer
 
 from utils.configuration import generate_dummy_config, load_config
+from utils.general import timing
 from utils.result import generate_results
 
 app = typer.Typer()
@@ -23,9 +24,12 @@ class CreationOption(enum.Enum):
 def create(what: CreationOption, experiment: str):
     experiment_dir = os.path.join("experiments", experiment)
     check_if_exists(experiment_dir)
-    generate_dummy_config(
-        experiment_dir, ["Custom Model Name 1", "Custom Model Name 2"]
-    )
+    if what is CreationOption.CONFIG:
+        generate_dummy_config(
+            experiment_dir, ["Custom Model Name 1", "Custom Model Name 2"]
+        )
+    else:
+        raise ValueError("Invalid Creation Option")
 
 
 @app.command()
@@ -51,7 +55,7 @@ def clean(directory: str):
             typer.echo(
                 f"All contents of the '{directory}' directory have been removed."
             )
-        except Exception as e:
+        except OSError as e:
             typer.echo(f"An error occurred while trying to clean the directory: {e}")
     else:
         typer.echo("Operation aborted.")
@@ -77,7 +81,8 @@ def run(experiment: str, config_file: str = "config.yaml", model: str = None):
     # TODO: Refactoring
     typer.echo(f"Running experiment '{experiment_dir}'\n")
     try:
-        results = experiment_obj.run(model=model)
+        with timing():
+            results = experiment_obj.run(model=model)
         typer.echo("Generate results...", nl=False)
         current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         results_dir = os.path.join("results", f"{current_time}_{experiment}")
