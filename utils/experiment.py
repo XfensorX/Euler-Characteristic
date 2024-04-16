@@ -25,11 +25,16 @@ class WholeExperimentResult:
 
 class Experiment:
     def __init__(
-        self, config: ExperimentConfig, models: {str: nn.Module}, device="cpu"
+        self,
+        config: ExperimentConfig,
+        models: {str: nn.Module},
+        device="cpu",
+        dtype="float32",
     ):
         self.device = device
         self.config = config
         self.models = models
+        self.dtype = dtype
         self.check_model_configurations_are_present()
         self.reset_experiment()
 
@@ -42,6 +47,7 @@ class Experiment:
             img_x_size=self.config.img_x_size,
             img_y_size=self.config.img_y_size,
             img_black_prob=self.config.img_prob_black,
+            dtype=self.dtype,
         )
 
         self.post_dataset_creation()

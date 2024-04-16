@@ -63,12 +63,16 @@ def clean(directory: str):
         typer.echo("Operation aborted.")
 
 
+dtype_mapping = {"float32": torch.float32, "float64": torch.float64}
+
+
 @app.command()
 def run(
     experiment: str,
     config_file: str = "config.yaml",
     model: str = None,
     device: str = "cpu",
+    dtype: str = "float32",
 ):
     """
     Run experiments.
@@ -78,6 +82,7 @@ def run(
     """
 
     torch.set_default_device(device)
+    torch.set_default_dtype(dtype_mapping[dtype])
 
     experiment_dir = os.path.join("experiments", experiment)
     check_if_exists(experiment_dir)
@@ -86,7 +91,10 @@ def run(
     module = get_experiment_module(os.path.join(experiment_dir, "train.py"))
 
     experiment_obj = module.Experiment(
-        config=config, models=module.get_models(config), device=device
+        config=config,
+        models=module.get_models(config),
+        device=device,
+        dtype=dtype_mapping[dtype],
     )
 
     # TODO: Refactoring

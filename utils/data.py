@@ -9,19 +9,24 @@ from utils.image import create_random_image
 
 
 class ImageDataset(Dataset):
-    def __init__(self, num_samples, img_x_size, img_y_size, img_black_prob):
+    def __init__(self, num_samples, img_x_size, img_y_size, img_black_prob, dtype):
         self.num_samples = num_samples
-        self.samples = np.array(
-            [
-                create_random_image(
-                    x_size=img_x_size, y_size=img_y_size, prob_black=img_black_prob
-                )
-                for _ in range(num_samples)
-            ],
-            dtype="float32",
+        self.samples = torch.tensor(
+            np.array(
+                [
+                    create_random_image(
+                        x_size=img_x_size, y_size=img_y_size, prob_black=img_black_prob
+                    )
+                    for _ in range(num_samples)
+                ]
+            ).astype("float"),
+            dtype=dtype,
         )
-        self.euler_chars = np.array(
-            [[measure.euler_number(x)] for x in self.samples], dtype="float32"
+        self.euler_chars = torch.tensor(
+            np.array(
+                [[measure.euler_number(x)] for x in np.array(self.samples)]
+            ).astype("float"),
+            dtype=dtype,
         )
 
     def __len__(self):
