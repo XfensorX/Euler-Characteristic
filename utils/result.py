@@ -59,6 +59,22 @@ def generate_results(experiment_name: str, results: WholeExperimentResult, path:
         ),
     )
     all_losses_df.to_csv(os.path.join(path, "combined_losses.csv"))
+    plot_combined_training_history(
+        {
+            model: result_obj.train_losses_history
+            for model, result_obj in results.model_results.items()
+        },
+        "Train Losses",
+        save_path=os.path.join(path, "train_loss.png"),
+    )
+    plot_combined_training_history(
+        {
+            model: result_obj.val_losses_history
+            for model, result_obj in results.model_results.items()
+        },
+        "Validation Losses",
+        save_path=os.path.join(path, "val_loss.png"),
+    )
 
 
 def save_predictions(
@@ -98,6 +114,20 @@ def save_predictions(
     df.to_csv(os.path.join(folder_name, "results.csv"), index=False)
 
 
+def plot_combined_training_history(losses, val_losses, title="", save_path=None):
+    for name, loss in losses.items():
+        plt.plot(loss, label=name)
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title(title)
+    plt.legend()
+    if save_path:
+        plt.savefig(save_path, bbox_inches="tight", dpi=1000)
+        plt.close()
+    else:
+        plt.show()
+
+
 def plot_training_history(train_losses, val_losses, title="", save_path=None):
     plt.plot(train_losses, label="Train Loss")
     plt.plot(val_losses, label="Val Loss")
@@ -106,7 +136,7 @@ def plot_training_history(train_losses, val_losses, title="", save_path=None):
     plt.title(title)
     plt.legend()
     if save_path:
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches="tight", dpi=1000)
         plt.close()
     else:
         plt.show()
