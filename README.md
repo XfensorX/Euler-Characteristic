@@ -33,7 +33,7 @@ euler run <experiment>
 # exit the VM
 exit
 
-# after experiment exit compy the results
+# after experiment exit copy the results
 gcloud compute scp --recurse <username>@<instance name>:~/euler/results ../results
 
 # destroy the ressource
