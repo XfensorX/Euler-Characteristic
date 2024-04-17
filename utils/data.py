@@ -24,7 +24,7 @@ class ImageDataset(Dataset):
         )
         self.euler_chars = torch.tensor(
             np.array(
-                [[measure.euler_number(x)] for x in np.array(self.samples)]
+                [[measure.euler_number(x)] for x in np.array(self.samples.cpu())]
             ).astype("float"),
             dtype=dtype,
         )
