@@ -73,6 +73,7 @@ def run(
     model: str = None,
     device: str = "cpu",
     dtype: str = "float32",
+    cpus: int = 1,
 ):
     """
     Run experiments.
@@ -80,7 +81,7 @@ def run(
     :param experiment_dir: Directory containing experiment configuration
     :param config_file: Experiment configuration file
     """
-
+    torch.set_num_threads(cpus)
     torch.set_default_device(device)
     torch.set_default_dtype(dtype_mapping[dtype])
 
