@@ -34,10 +34,24 @@ euler run <experiment>
 exit
 
 # after experiment exit copy the results
-gcloud compute scp --recurse <username>@<instance name>:~/euler/results ../results
+gcloud compute scp --recurse <username>@<instance name>:~/euler/results .
+# !! please notice that the time of the machine is different in another region
 
 # destroy the ressource
 terraform destroy
+```
+
+Run the process in the background:
+
+```bash
+screen #start a session
+# PRESS CTRL-A then CTRL-D to detach session
+exit # the VM
+
+# after login again you can see progress with
+screen -r
+#If it is already finished, just chekc the outputs
+
 ```
 
 # Setup
