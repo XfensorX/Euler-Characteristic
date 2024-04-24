@@ -41,3 +41,7 @@ def calculate_loss(model, data_loader, criterion, use_rounding=False):
             total_loss += loss.item() * features.size(0)
 
     return total_loss / len(data_loader.dataset)
+
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)

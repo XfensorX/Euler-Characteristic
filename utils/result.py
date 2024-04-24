@@ -41,14 +41,15 @@ def generate_results(experiment_name: str, results: WholeExperimentResult, path:
         )
 
     df_data = {}
-    for model, losses in results.model_results.items():
+    for model, info in results.model_results.items():
         df_data[model] = [
-            losses.losses.train,
-            losses.losses.validation,
-            losses.losses.test,
-            losses.losses_with_rounding.train,
-            losses.losses_with_rounding.validation,
-            losses.losses_with_rounding.test,
+            info.losses.train,
+            info.losses.validation,
+            info.losses.test,
+            info.losses_with_rounding.train,
+            info.losses_with_rounding.validation,
+            info.losses_with_rounding.test,
+            info.parameters,
         ]
 
     all_losses_df = pd.DataFrame.from_dict(
@@ -56,7 +57,7 @@ def generate_results(experiment_name: str, results: WholeExperimentResult, path:
         orient="index",
         columns=pd.MultiIndex.from_product(
             [["Loss", "Loss with Rounding"], ["Train", "Validation", "Test"]]
-        ),
+        ).union(pd.MultiIndex.from_tuples([("Model Info", "Parameters")])),
     )
     all_losses_df.to_csv(os.path.join(path, "combined_losses.csv"))
     plot_combined_training_history(

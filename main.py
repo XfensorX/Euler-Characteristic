@@ -143,4 +143,8 @@ def get_experiment_module(file_path: str):
 
 
 if __name__ == "__main__":
+    # TODO: maybe use this for multicore cpu?
+    # torch.distributed.init_process_group(
+    #    "gloo", init_method="tcp://localhost:12345", rank=0, world_size=10
+    # )
     app()

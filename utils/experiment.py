@@ -5,7 +5,7 @@ from torch import nn
 
 from utils.configuration import ExperimentConfig
 from utils.data import ImageDataset, SplittedDataLoaders, create_splitted_dataloader
-from utils.evaluation import LossCalculation, calculate_all_losses
+from utils.evaluation import LossCalculation, calculate_all_losses, count_parameters
 from utils.training import train_model
 
 
@@ -15,6 +15,7 @@ class ModelExperimentResult:
     val_losses_history: List[float]
     losses: LossCalculation
     losses_with_rounding: LossCalculation
+    parameters: int
 
 
 @dataclass
@@ -103,8 +104,9 @@ class Experiment:
         model_results = {}
         for name in models_to_run:
             output_to(f"Running {name}...")
+            model = self.models[name]
             train_losses, val_losses = train_model(
-                self.models[name],
+                model,
                 self.data_loaders,
                 self.criterion,
                 self.optimizers[name],
@@ -116,16 +118,17 @@ class Experiment:
                 val_losses_history=val_losses,
                 losses=calculate_all_losses(
                     self.data_loaders,
-                    self.models[name],
+                    model,
                     self.criterion,
                     use_rounding=False,
                 ),
                 losses_with_rounding=calculate_all_losses(
                     self.data_loaders,
-                    self.models[name],
+                    model,
                     self.criterion,
                     use_rounding=True,
                 ),
+                parameters=count_parameters(model),
             )
             output_to("")
 
