@@ -16,6 +16,7 @@ class ModelExperimentResult:
     losses: LossCalculation
     losses_with_rounding: LossCalculation
     parameters: int
+    description: str
 
 
 @dataclass
@@ -129,6 +130,7 @@ class Experiment:
                     use_rounding=True,
                 ),
                 parameters=count_parameters(model),
+                description=str(model),
             )
             output_to("")
 

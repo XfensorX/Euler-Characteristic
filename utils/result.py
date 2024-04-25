@@ -39,6 +39,10 @@ def generate_results(experiment_name: str, results: WholeExperimentResult, path:
             f"Training History of '{model_name}'",
             os.path.join(model_folder_path, "training_history.png"),
         )
+        with open(
+            os.path.join(model_folder_path, "description.txt"), "w", encoding="utf8"
+        ) as f:
+            f.write(result_obj.description)
 
     df_data = {}
     for model, info in results.model_results.items():
