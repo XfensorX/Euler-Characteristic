@@ -6,7 +6,7 @@ from typing import Dict, List
 import torch
 import yaml
 
-from utils.errors import InvalidCriterionError, InvalidOptimizerError
+from utils.errors import InvalidOptionError
 
 
 class Criterion(enum.Enum):
@@ -24,7 +24,7 @@ class Criterion(enum.Enum):
     @staticmethod
     def check_if_valid(criterion: str):
         if not criterion in [c.value for c in Criterion]:
-            raise InvalidCriterionError(criterion)
+            raise InvalidOptionError(criterion, [c.value for c in Criterion])
 
 
 class Optimizer(enum.Enum):
@@ -42,7 +42,7 @@ class Optimizer(enum.Enum):
     @staticmethod
     def check_if_valid(optimizer: str):
         if not optimizer in [o.value for o in Optimizer]:
-            raise InvalidOptimizerError(optimizer)
+            raise InvalidOptionError(optimizer, [o.value for o in Optimizer])
 
 
 @dataclass
