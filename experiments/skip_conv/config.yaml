@@ -1,0 +1,13 @@
+img_x_size: 12
+img_y_size: 12
+img_prob_black: 0.8
+dataset_size: 100000
+train_set_perc: 80
+validation_set_perc: 10
+batch_size: 64
+criterion: MSELoss
+optimizer: Adam
+training_configs:
+    skip_conv:
+        learning_rate: 0.002
+        epochs: 100
