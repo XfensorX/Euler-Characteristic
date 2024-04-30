@@ -80,6 +80,10 @@ class ExperimentConfig:
             model_parameters, self.training_configs[model_name].learning_rate
         )
 
+    def to_yaml_file(self, path: str):
+        with open(path, "w", encoding="utf8") as config_file:
+            yaml.dump(asdict(self), config_file)
+
     def __str__(self):
         return yaml.dump(asdict(self))
 
@@ -138,7 +142,7 @@ def load_config(path: str) -> ExperimentConfig:
             )
         raise error from e
 
-    except (InvalidCriterionError, InvalidOptimizerError) as e:
+    except InvalidOptionError as e:
         error = ValueError("Invalid yaml file.")
         error.note = str(e) + str(e.note)
         raise error from e

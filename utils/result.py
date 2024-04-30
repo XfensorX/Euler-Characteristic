@@ -1,65 +1,26 @@
 import os
-from dataclasses import asdict
 from typing import Dict
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import yaml
 
-from utils.experiment import TrainingHistory, WholeExperimentResult
+from utils.experiment import (
+    ModelExperimentResult,
+    TrainingHistory,
+    WholeExperimentResult,
+)
 
 
-# TODO: refactor this into individual subfunctions
 def generate_results(results: WholeExperimentResult, path: str):
     os.makedirs(path, exist_ok=True)
 
-    config_yaml_path = os.path.join(path, "used_config.yaml")
-    with open(config_yaml_path, "w", encoding="utf8") as config_file:
-        yaml.dump(asdict(results.config), config_file)
-
-    for model_name, model_result in results.model_results.items():
-        model_folder_path = os.path.join(path, model_name.replace(" ", "_"))
-        os.makedirs(model_folder_path, exist_ok=True)
-
-        loss_history_path = os.path.join(model_folder_path, f"loss_history.csv")
-        pd.DataFrame(
-            {
-                "Epoch": list(range(1, 1 + len(model_result.history.train))),
-                "Training Loss": model_result.history.train,
-                "Validation Loss": model_result.history.validation,
-            }
-        ).to_csv(loss_history_path, index=False)
-
-        plot_history(
-            model_histories={model_name: model_result.history},
-            title=f"Training History of '{model_name}'",
-            save_path=os.path.join(model_folder_path, "training_history.png"),
-        )
-        with open(
-            os.path.join(model_folder_path, "description.txt"), "w", encoding="utf8"
-        ) as f:
-            f.write(model_result.description)
-
-    df_data = {}
     for model, info in results.model_results.items():
-        df_data[model] = [
-            info.losses.train,
-            info.losses.validation,
-            info.losses.test,
-            info.losses_with_rounding.train,
-            info.losses_with_rounding.validation,
-            info.losses_with_rounding.test,
-            info.parameters,
-        ]
+        save_individual_model_results(model, info, path)
 
-    all_losses_df = pd.DataFrame.from_dict(
-        df_data,
-        orient="index",
-        columns=pd.MultiIndex.from_product(
-            [["Loss", "Loss with Rounding"], ["Train", "Validation", "Test"]]
-        ).union(pd.MultiIndex.from_tuples([("Model Info", "Parameters")])),
+    results.config.to_yaml_file(os.path.join(path, "used_config.yaml"))
+    combined_metrics_to_csv(
+        results.model_results, os.path.join(path, "combined_losses.csv")
     )
-    all_losses_df.to_csv(os.path.join(path, "combined_losses.csv"))
 
     plot_history(
         {model: result.history for model, result in results.model_results.items()},
@@ -73,6 +34,45 @@ def generate_results(results: WholeExperimentResult, path: str):
         save_path=os.path.join(path, "val_loss.png"),
         plot_training_loss=False,
     )
+
+
+def combined_metrics_to_csv(model_results: Dict[str, ModelExperimentResult], path: str):
+    pd.DataFrame.from_dict(
+        {
+            model: [
+                info.losses.train,
+                info.losses.validation,
+                info.losses.test,
+                info.losses_with_rounding.train,
+                info.losses_with_rounding.validation,
+                info.losses_with_rounding.test,
+                info.parameters,
+            ]
+            for model, info in model_results.items()
+        },
+        orient="index",
+        columns=pd.MultiIndex.from_product(
+            [["Loss", "Loss with Rounding"], ["Train", "Validation", "Test"]]
+        ).union(pd.MultiIndex.from_tuples([("Model Info", "Parameters")])),
+    ).to_csv(path)
+
+
+def save_individual_model_results(
+    model_name: str, model_result: ModelExperimentResult, directory: str
+):
+    model_path = os.path.join(directory, model_name.replace(" ", "_"))
+    os.makedirs(model_path, exist_ok=True)
+
+    model_result.history.to_csv_file(os.path.join(model_path, "training_history.csv"))
+
+    plot_history(
+        model_histories={model_name: model_result.history},
+        title=f"Training History of '{model_name}'",
+        save_path=os.path.join(model_path, "training_history.png"),
+    )
+
+    with open(os.path.join(model_path, "description.txt"), "w", encoding="utf8") as f:
+        f.write(model_result.description)
 
 
 def plot_history(

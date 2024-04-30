@@ -1,6 +1,8 @@
+import os
 from dataclasses import dataclass
 from typing import Dict, List
 
+import pandas as pd
 from torch import nn
 
 from utils.configuration import ExperimentConfig
@@ -13,6 +15,15 @@ from utils.training import train_model
 class TrainingHistory:
     train: List[float]
     validation: List[float]
+
+    def to_csv_file(self, path: str):
+        pd.DataFrame(
+            {
+                "Epoch": list(range(1, 1 + len(self.train))),
+                "Training Loss": self.train,
+                "Validation Loss": self.validation,
+            }
+        ).to_csv(path, index=False)
 
 
 @dataclass
