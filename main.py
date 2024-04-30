@@ -8,7 +8,7 @@ import shutil
 import torch
 import typer
 
-from utils.configuration import generate_dummy_config, load_config
+from utils.configuration import load_config, ExperimentConfig
 from utils.general import timing
 from utils.result import generate_results
 
@@ -27,7 +27,7 @@ def create(what: CreationOption, experiment: str):
     experiment_dir = os.path.join("experiments", experiment)
     check_if_exists(experiment_dir)
     if what is CreationOption.CONFIG:
-        generate_dummy_config(
+        ExperimentConfig.save_dummy(
             experiment_dir, ["Custom Model Name 1", "Custom Model Name 2"]
         )
     else:

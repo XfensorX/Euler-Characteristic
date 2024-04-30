@@ -6,53 +6,43 @@ from typing import Dict, List
 import torch
 import yaml
 
+from utils.errors import InvalidCriterionError, InvalidOptimizerError
+
 
 class Criterion(enum.Enum):
     MSE_LOSS = "MSELoss"
-
-    def __str__(self):
-        return str(self.value)
 
     def get_func(self):
         if self is Criterion.MSE_LOSS:
             return torch.nn.MSELoss()
 
-        raise ValueError("An Option is not implemented.")
+        raise NotImplementedError(f"Criterion {self} is not implemented.")
+
+    def __str__(self):
+        return str(self.value)
 
     @staticmethod
     def check_if_valid(criterion: str):
-        if criterion in [c.value for c in Criterion]:
-            return
-
-        error = ValueError("Invalid criterion in configuration.")
-        error.note = "Valid criteria are: \n- " + "\n- ".join(
-            [c.value for c in Criterion]
-        )
-        raise error
+        if not criterion in [c.value for c in Criterion]:
+            raise InvalidCriterionError(criterion)
 
 
 class Optimizer(enum.Enum):
     ADAM = "Adam"
 
-    def __str__(self):
-        return str(self.value)
-
     def get_func(self, model_parameters, learning_rate):
         if self is Optimizer.ADAM:
             return torch.optim.Adam(model_parameters, lr=learning_rate)
 
-        raise ValueError("An Option is not implemented.")
+        raise NotImplementedError(f"Optimizer {self} is not implemented.")
+
+    def __str__(self):
+        return str(self.value)
 
     @staticmethod
     def check_if_valid(optimizer: str):
-        if optimizer in [o.value for o in Optimizer]:
-            return
-
-        error = ValueError("Invalid optimizer in configuration.")
-        error.note = "Valid optimizer are: \n- " + "\n- ".join(
-            [o.value for o in Optimizer]
-        )
-        raise error
+        if not optimizer in [o.value for o in Optimizer]:
+            raise InvalidOptimizerError(optimizer)
 
 
 @dataclass
@@ -108,11 +98,11 @@ class ExperimentConfig:
             {name: TrainingConfig.get_dummy() for name in model_names},
         )
 
-
-def generate_dummy_config(path: str, model_names: List[str]):
-    dummy_path = os.path.join(path, "dummy_config.yaml")
-    with open(dummy_path, "w") as config_file:
-        yaml.dump(asdict(ExperimentConfig.get_dummy(model_names)), config_file)
+    @staticmethod
+    def save_dummy(path: str, model_names: List[str]):
+        dummy_path = os.path.join(path, "dummy_config.yaml")
+        with open(dummy_path, "w") as config_file:
+            config_file.write(str(ExperimentConfig.get_dummy(model_names)))
 
 
 def load_config(path: str) -> ExperimentConfig:
@@ -146,11 +136,11 @@ def load_config(path: str) -> ExperimentConfig:
                 + "The following configurations are missing:\n"
                 + ":\n".join(str(e).split("'")[1::2] + [""])
             )
-        raise error
+        raise error from e
 
-    except ValueError as e:
+    except (InvalidCriterionError, InvalidOptimizerError) as e:
         error = ValueError("Invalid yaml file.")
         error.note = str(e) + str(e.note)
-        raise error
+        raise error from e
 
     return config
