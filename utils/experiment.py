@@ -10,9 +10,14 @@ from utils.training import train_model
 
 
 @dataclass
+class TrainingHistory:
+    train: List[float]
+    validation: List[float]
+
+
+@dataclass
 class ModelExperimentResult:
-    train_losses_history: List[float]
-    val_losses_history: List[float]
+    history: TrainingHistory
     losses: LossCalculation
     losses_with_rounding: LossCalculation
     parameters: int
@@ -115,8 +120,7 @@ class Experiment:
                 output_to=output_to,
             )
             model_results[name] = ModelExperimentResult(
-                train_losses_history=train_losses,
-                val_losses_history=val_losses,
+                history=TrainingHistory(train=train_losses, validation=val_losses),
                 losses=calculate_all_losses(
                     self.data_loaders,
                     model,
