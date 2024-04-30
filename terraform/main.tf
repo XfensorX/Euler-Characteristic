@@ -13,7 +13,7 @@ variable "ZONE" {
 
 provider "google" {
   project = "idyllic-chimera-419902"
-  region  = "us-west1"
+  region  = "us-central1"
 }
 
 variable "NAME" {
