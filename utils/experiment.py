@@ -1,4 +1,3 @@
-import os
 from dataclasses import dataclass
 from typing import Dict, List
 
@@ -119,6 +118,7 @@ class Experiment:
             models_to_run = [model]
 
         model_results = {}
+        #TODO: Change to enumerate
         for name in models_to_run:
             output_to(f"Running {name}...")
             model = self.models[name]

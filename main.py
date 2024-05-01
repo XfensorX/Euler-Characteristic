@@ -47,13 +47,12 @@ def clean(directory: str):
         typer.echo(f"The directory '{directory}' does not exist.")
         raise typer.Exit(1)
 
-    confirm = typer.confirm(
+    if typer.confirm(
         f"Do you really want to fully remove all contents of the '{directory}' directory?"
-    )
-    if confirm:
+    ):
         try:
             shutil.rmtree(directory)
-            os.makedirs("results")
+            os.makedirs(directory)
             typer.echo(
                 f"All contents of the '{directory}' directory have been removed."
             )
@@ -73,7 +72,7 @@ def run(
     model: str = None,
     device: str = "cpu",
     dtype: str = "float32",
-    cpus: int = 1,
+    cpus: int = 8,
 ):
     """
     Run experiments.
@@ -105,9 +104,11 @@ def run(
             results = experiment_obj.run(model=model)
 
         typer.echo("Generate results...", nl=False)
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        results_dir = os.path.join("results", f"{current_time}_{experiment}")
-        generate_results(experiment_dir, results, results_dir)
+        results_dir = os.path.join(
+            "results",
+            f"{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_{experiment}",
+        )
+        generate_results(results, results_dir)
         typer.echo(f"\rGenerated results in {results_dir}!      ")
     except KeyError as e:
         typer.echo(e.note)
