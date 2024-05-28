@@ -9,6 +9,6 @@ criterion: MSELoss
 optimizer: Adam
 training_configs:
     transformer:
-        learning_rate: 0.01
-        epochs: 1000
+        learning_rate: 0.005
+        epochs: 500
 
