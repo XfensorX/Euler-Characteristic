@@ -7,6 +7,20 @@ import torch
 import yaml
 
 from utils.errors import InvalidOptionError
+from utils.config import dtype_mapping
+import numpy as np
+
+
+def set_torch_defaults(device: str, dtype: str, num_threads: int):
+    if dtype not in dtype_mapping:
+        raise ValueError(f"{dtype} not available. Choose from: {", ".join(dtype_mapping)}")
+
+    torch.manual_seed(42)
+    np.random.seed(42)
+
+    torch.set_num_threads(num_threads)
+    torch.set_default_device(device)
+    torch.set_default_dtype(dtype_mapping[dtype])
 
 
 class Criterion(enum.Enum):

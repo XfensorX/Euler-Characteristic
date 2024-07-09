@@ -32,6 +32,7 @@ def calculate_all_losses(
 def calculate_loss(model, data_loader, criterion, use_rounding=False):
     model.eval()
     total_loss = 0.0
+    total_datapoints = 0
     with torch.no_grad():
         for features, labels in data_loader:
             outputs = model(features)
@@ -39,8 +40,9 @@ def calculate_loss(model, data_loader, criterion, use_rounding=False):
                 outputs = torch.round(outputs)
             loss = criterion(outputs, labels)
             total_loss += loss.item() * features.size(0)
+            total_datapoints += features.size(0)
 
-    return total_loss / len(data_loader.dataset)
+    return total_loss / total_datapoints
 
 
 def count_parameters(model):

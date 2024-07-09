@@ -5,6 +5,8 @@ import torch
 from skimage import measure
 from torch.utils.data import DataLoader, Dataset
 
+from typing import Union
+
 from utils.image import create_random_image
 
 
@@ -40,13 +42,18 @@ class ImageDataset(Dataset):
 
 @dataclass
 class SplittedDataLoaders:
-    train: DataLoader
-    validation: DataLoader
-    test: DataLoader
+    train: Union[DataLoader, torch.Tensor]
+    validation: Union[DataLoader, torch.Tensor]
+    test: Union[DataLoader, torch.Tensor]
 
 
 def create_splitted_dataloader(
-    dataset, train_set_perc, val_set_perc, batch_size, device="cpu"
+    dataset,
+    train_set_perc,
+    val_set_perc,
+    batch_size,
+    device="cpu",
+    use_torch_data_loaders=True,
 ) -> SplittedDataLoaders:
     """
     Creates data loaders and torch.util.data.Datasets
@@ -62,29 +69,59 @@ def create_splitted_dataloader(
             "No test set left. Please adjust training/validation/test split fractions."
         )
 
+    # TODO: use fact, that sizes can be given as fractions
     train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(
         dataset,
         [train_size, val_size, test_size],
         generator=torch.Generator(device=device),
     )
 
-    return SplittedDataLoaders(
-        train=DataLoader(
-            train_dataset,
-            batch_size=batch_size,
-            shuffle=True,
-            generator=torch.Generator(device=device),
-        ),
-        validation=DataLoader(
-            val_dataset,
-            batch_size=batch_size,
-            shuffle=False,
-            generator=torch.Generator(device=device),
-        ),
-        test=DataLoader(
-            test_dataset,
-            batch_size=batch_size,
-            shuffle=False,
-            generator=torch.Generator(device=device),
-        ),
-    )
+    if use_torch_data_loaders:
+        return SplittedDataLoaders(
+            train=DataLoader(
+                train_dataset,
+                batch_size=batch_size,
+                shuffle=False,
+                generator=torch.Generator(device=device),
+            ),
+            validation=DataLoader(
+                val_dataset,
+                batch_size=batch_size,
+                shuffle=False,
+                generator=torch.Generator(device=device),
+            ),
+            test=DataLoader(
+                test_dataset,
+                batch_size=batch_size,
+                shuffle=False,
+                generator=torch.Generator(device=device),
+            ),
+        )
+    else:
+
+        train_dataset = dataset[train_dataset.indices]
+        val_dataset = dataset[val_dataset.indices]
+        test_dataset = dataset[test_dataset.indices]
+
+        train_dataset = split_up_to_batch(
+            train_dataset[0], train_dataset[1], batch_size
+        )
+        test_dataset = split_up_to_batch(test_dataset[0], test_dataset[1], batch_size)
+        val_dataset = split_up_to_batch(val_dataset[0], val_dataset[1], batch_size)
+
+        # TODO: Shuffle the training set
+        return SplittedDataLoaders(
+            train=train_dataset,
+            validation=val_dataset,
+            test=test_dataset,
+        )
+
+
+def split_up_to_batch(X, Y, batch_size):
+    return [
+        (
+            X[i * batch_size : (i + 1) * batch_size],
+            Y[i * batch_size : (i + 1) * batch_size],
+        )
+        for i in range(len(X) // batch_size + 1)
+    ]

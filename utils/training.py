@@ -44,6 +44,7 @@ def train_model(
 def create_text_output(
     epoch, num_epochs, epoch_train_loss, epoch_val_loss, is_finished=False
 ):
+    # TODO: is finished is the same as epoch == num_epochs
     if is_finished:
         return f"Finished! Train Loss: {epoch_train_loss:.4f}, Val Loss: {epoch_val_loss:.4f}"
     else:

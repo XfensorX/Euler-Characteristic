@@ -47,11 +47,13 @@ class Experiment:
         models: {str: nn.Module},
         device="cpu",
         dtype="float32",
+        use_torch_data_loaders=True,
     ):
         self.device = device
         self.config = config
         self.models = models
         self.dtype = dtype
+        self.use_torch_data_loaders = use_torch_data_loaders
         self.check_model_configurations_are_present()
         self.reset_experiment()
 
@@ -75,6 +77,7 @@ class Experiment:
             self.config.validation_set_perc,
             self.config.batch_size,
             device=self.device,
+            use_torch_data_loaders=self.use_torch_data_loaders,
         )
         self.criterion = self.config.get_criterion_func()
         self.optimizers = {
@@ -118,7 +121,7 @@ class Experiment:
             models_to_run = [model]
 
         model_results = {}
-        #TODO: Change to enumerate
+        # TODO: Change to enumerate
         for name in models_to_run:
             output_to(f"Running {name}...")
             model = self.models[name]

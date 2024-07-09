@@ -8,14 +8,16 @@ import shutil
 import torch
 import typer
 
-from utils.configuration import load_config, ExperimentConfig
+from utils.config import dtype_mapping
+from utils.configuration import ExperimentConfig, load_config, set_torch_defaults
 from utils.general import timing
 from utils.result import generate_results
 
 app = typer.Typer()
 
+EXPERIMENT_DIR = "experiments"
 
-CAN_CLEAN_DIRS = "results"
+CAN_CLEAN_DIRS = ["results"]
 
 
 class CreationOption(enum.Enum):
@@ -24,11 +26,11 @@ class CreationOption(enum.Enum):
 
 @app.command()
 def create(what: CreationOption, experiment: str):
-    experiment_dir = os.path.join("experiments", experiment)
-    check_if_exists(experiment_dir)
+    experiment_location = os.path.join(EXPERIMENT_DIR, experiment)
+    check_if_exists(experiment_location)
     if what is CreationOption.CONFIG:
         ExperimentConfig.save_dummy(
-            experiment_dir, ["Custom Model Name 1", "Custom Model Name 2"]
+            experiment_location, ["Custom Model Name 1", "Custom Model Name 2"]
         )
     else:
         raise ValueError("Invalid Creation Option")
@@ -62,9 +64,6 @@ def clean(directory: str):
         typer.echo("Operation aborted.")
 
 
-dtype_mapping = {"float32": torch.float32, "float64": torch.float64}
-
-
 @app.command()
 def run(
     experiment: str,
@@ -73,6 +72,7 @@ def run(
     device: str = "cpu",
     dtype: str = "float32",
     cpus: int = 8,
+    use_torch_data_loaders: bool = False,
 ):
     """
     Run experiments.
@@ -80,9 +80,7 @@ def run(
     :param experiment_dir: Directory containing experiment configuration
     :param config_file: Experiment configuration file
     """
-    torch.set_num_threads(cpus)
-    torch.set_default_device(device)
-    torch.set_default_dtype(dtype_mapping[dtype])
+    set_torch_defaults(device, dtype, cpus)
 
     experiment_dir = os.path.join("experiments", experiment)
     check_if_exists(experiment_dir)
@@ -95,6 +93,7 @@ def run(
         models=module.get_models(config),
         device=device,
         dtype=dtype_mapping[dtype],
+        use_torch_data_loaders=use_torch_data_loaders,
     )
 
     # TODO: Refactoring
