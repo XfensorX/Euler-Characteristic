@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader, Dataset
 from typing import Union
 
 from utils.image import create_random_image
+from math import ceil
 
 
 class ImageDataset(Dataset):
@@ -123,5 +124,5 @@ def split_up_to_batch(X, Y, batch_size):
             X[i * batch_size : (i + 1) * batch_size],
             Y[i * batch_size : (i + 1) * batch_size],
         )
-        for i in range(len(X) // batch_size + 1)
+        for i in range(ceil(len(X) / batch_size))
     ]
